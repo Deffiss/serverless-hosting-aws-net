@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  WebSiteBucketName:
+    Description: Bucket Name
+    Type: String
+Resources:
+
+  S3BucketLogs:
+    Type: AWS::S3::Bucket
+#    DeletionPolicy: Retain
+    Properties:
+      AccessControl: LogDeliveryWrite
+      BucketName: !Sub '${WebSiteBucketName}-logs'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  S3BucketRoot:
+    Type: AWS::S3::Bucket
+#    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Ref WebSiteBucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref 'S3BucketLogs'
+        LogFilePrefix: 'origin/'
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      VersioningConfiguration:
+        Status: Enabled
+
+  S3BucketBackend:
+    Type: AWS::S3::Bucket
+#    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub '${WebSiteBucketName}-backend'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+
+Outputs:
+  S3BucketRoot:
+    Description: Website bucket
+    Value: !Ref S3BucketRoot
+  S3BucketRootName:
+    Description: Website bucket domain name
+    Value: !GetAtt S3BucketRoot.DomainName
+  S3BucketRootArn:
+    Description: Website bucket locator
+    Value: !GetAtt S3BucketRoot.Arn
+  S3BucketLogs:
+    Description: Logging bucket
+    Value: !Ref S3BucketLogs
+  S3BucketLogsName:
+    Description: Logging bucket domain Name
+    Value: !GetAtt S3BucketLogs.DomainName
+  S3BucketBackend:
+    Description: Backend bucket
+    Value: !Ref S3BucketBackend
+  S3BucketBackendArn:
+    Description: Backend bucket locator
+    Value: !GetAtt S3BucketBackend.Arn

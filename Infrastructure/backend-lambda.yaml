@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An Amazon API Gateway HTTP API and an AWS Lambda function.
+
+Parameters:
+
+  S3BucketBackend:
+    Description: Backend Bucket
+    Type: String
+  S3BucketBackendKey:
+    Description: Backend Bucket
+    Type: String
+    Default: BackendLambda.zip
+  HostedZoneId:
+    Description: Hosted Zone
+    Type: String
+  DomainName:
+    Description: Apex domain
+    Type: String
+  SubDomain:
+    Description: Subdomain
+    Type: String
+  CertificateArn:
+    Description: Certificate locater
+    Type: String
+
+Resources:
+
+  BackendFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /weather
+            Method: get
+            RestApiId: !Ref HttpApi
+      CodeUri:
+        Bucket: !Ref S3BucketBackend
+        Key: !Ref S3BucketBackendKey
+      Handler: BackendLambda
+      Runtime: dotnet6
+      Architectures:
+        - arm64
+      MemorySize: 128
+      Timeout: 30
+
+  HttpApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Domain:
+        DomainName: !Sub ${SubDomain}.${DomainName}
+        CertificateArn: !Ref CertificateArn
+        EndpointConfiguration: EDGE
+      MethodSettings:
+        - ResourcePath: /weather
+          HttpMethod: GET
+      Cors:
+        AllowOrigin: "'*'"
+
+Outputs:
+  HttpApiUrl:
+    Description: URL of your API endpoint
+    Value:  !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/'
+  HttpApiId:
+    Description: Api id of HttpApi
+    Value: !Ref HttpApi

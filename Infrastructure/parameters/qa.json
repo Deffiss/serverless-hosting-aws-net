@@ -1,0 +1,8 @@
+{
+    "Parameters": {
+        "DomainName": "domain.com",
+        "WebSiteBucketName": "static-site-qa",
+        "HostedZoneId": "",
+        "CertificateArn": ""
+    }
+}
